@@ -1,3 +1,4 @@
+[![Run Tests](https://github.com/GoOnNowGit/dnsstamps-to-fwrules/actions/workflows/main.yml/badge.svg)](https://github.com/GoOnNowGit/dnsstamps-to-fwrules/actions/workflows/main.yml)
 # dnsstamps-to-fwrules (Still a work in progress...)
 Create firewall rules based on sources in your dnscrypt-proxy.toml file
 
