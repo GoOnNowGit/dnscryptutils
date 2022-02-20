@@ -115,7 +115,8 @@ def minisign_verify(
 
 def get_sdns_info(data: str):
     for stamp in get_stamps(data):
-        if info := parse_stamp(stamp):
+        info = parse_stamp(stamp)
+        if info:
             yield info
 
 
