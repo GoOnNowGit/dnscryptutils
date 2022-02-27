@@ -13,11 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up python versions
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
+      - name: Install Python
+        run: brew install python@3.7 python@3.8 python@3.9
 
       - name: Install minisign
         run: brew install minisign
