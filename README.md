@@ -14,12 +14,12 @@ python dnsstamps-to-rules.py --config /usr/local/etc/dnscrypt-proxy.toml --rule_
 ```
 ### Output Snippet (Using the PF rule maker)
 ```
-pass out quick on en0 proto tcp to 94.140.14.14 port 5443 label public-resolvers
-pass out quick on en0 proto tcp to 176.103.130.130 label public-resolvers
-pass out quick on en0 proto tcp to 94.140.14.15 port 5443 label public-resolvers
-pass out quick on en0 proto tcp to 176.103.130.132 label public-resolvers
-pass out quick on en0 proto tcp to 2a04:5200:fff4::13ff port 8443 label public-resolvers
-pass out quick on en0 proto tcp to 51.15.124.208 label public-resolvers
+pass out quick proto tcp to 94.140.14.14 port 5443 label public-resolvers
+pass out quick proto tcp to 176.103.130.130 label public-resolvers
+pass out quick proto tcp to 94.140.14.15 port 5443 label public-resolvers
+pass out quick proto tcp to 176.103.130.132 label public-resolvers
+pass out quick proto tcp to 2a04:5200:fff4::13ff port 8443 label public-resolvers
+pass out quick proto tcp to 51.15.124.208 label public-resolvers
 ```
 
 ## Resources
