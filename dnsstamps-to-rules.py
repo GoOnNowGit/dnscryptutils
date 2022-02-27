@@ -18,13 +18,27 @@ parser.add_argument(
     help="dnscrypt-proxy.toml file path",
 )
 
+parser.add_argument(
+    "--rule_type",
+    required=True,
+    choices=["pf"],
+    dest="rule_type",
+    action="store",
+    help="type of rules to output",
+)
+
 args = parser.parse_args()
+
+rule_makers = {
+    "pf": PfRule(),
+}
 
 
 def main():
+    rule_maker = rule_makers[args.rule_type]
+
     toml_data = toml.load(args.dnscrypt_config)
     sources = utils.get_sources_from_toml(toml_data)
-    pf_rule = PfRule(interface="en0")
 
     for source, url, minisign_key in sources:
         try:
@@ -32,9 +46,9 @@ def main():
         except utils.NoDataFromSource:
             continue
 
-        pf_rule.label = source
+        rule_maker.label = source
         for info in utils.get_sdns_info(data):
-            rule = pf_rule.make_rule(info)
+            rule = rule_maker.make_rule(info)
             print(rule)
 
 

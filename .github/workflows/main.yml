@@ -6,24 +6,15 @@ jobs:
   build:
     runs-on: macos-latest
 
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
-
     steps:
       - uses: actions/checkout@v2
-
-      - name: Set up python versions
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
 
       - name: Install minisign
         run: brew install minisign
 
-      - name: Install python dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run Tests
-        run: tox
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+      - run: pip install tox && tox

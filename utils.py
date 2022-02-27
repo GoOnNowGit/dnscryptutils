@@ -87,7 +87,7 @@ def subprocess_execute(args: list):
     """
     execute args via subprocess
     """
-    return subprocess.call(args)
+    return subprocess.call(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def minisign_verify(
