@@ -19,7 +19,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--rule_type",
+    "--rule-type",
     required=True,
     choices=["pf"],
     dest="rule_type",

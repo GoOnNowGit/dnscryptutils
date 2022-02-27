@@ -9,7 +9,7 @@ Create firewall rules based on sources in your dnscrypt-proxy.toml file
 
 ## Execute
 ```
-python dnsstamps-to-rules.py --config /usr/local/etc/dnscrypt-proxy.toml --rule_type pf
+python dnsstamps-to-rules.py --config /usr/local/etc/dnscrypt-proxy.toml --rule-type pf
 
 ```
 ### Output Snippet (Using the PF rule maker)
