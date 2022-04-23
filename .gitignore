@@ -3,9 +3,7 @@
 *.swp
 .DS_Store
 .coverage
-.coverage/
 .hypothesis
-.hypothesis/
 .pytest_cache
 .tox
 .venv

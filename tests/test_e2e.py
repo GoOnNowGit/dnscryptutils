@@ -4,7 +4,7 @@ import unittest
 
 import toml
 
-import utils
+from dnscryptutils import utils
 
 
 class TestE2E(unittest.TestCase):

@@ -3,8 +3,7 @@ import sys
 
 import toml
 
-import utils
-from rules import PfRule
+from dnscryptutils import PfRule, utils
 
 parser = argparse.ArgumentParser(
     description="build firweall rules from dnstamps in dnscrypt-proxy.toml sources"

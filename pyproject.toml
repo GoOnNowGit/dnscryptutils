@@ -1,12 +1,20 @@
-[flake8]
-ignore = E501
-exclude =
-    # No need to traverse our git directory
-    .git,
-    # There's no value in checking cache directories
-    __pycache__
+[build-system]
+requires = ["setuptools>=40.6.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[pytest]
-addopts = -ra
-testpaths = tests
-xfail_strict = true
+[tool.coverage.run]
+parallel = true
+branch = true
+source = ["src"]
+
+[tool.coverage.paths]
+source = ["src", ".tox/*/site-packages"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    # PyPy is unacceptably slow under coverage.
+    "if PYPY:",
+]
