@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from rules import PfRule
+from dnscryptutils.rules import PfRule
 
 
 class TestPfRule(TestCase):

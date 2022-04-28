@@ -3,7 +3,7 @@ import os.path
 import unittest
 from unittest.mock import MagicMock
 
-import utils
+from dnscryptutils import utils
 
 
 class FakeMinisign:
