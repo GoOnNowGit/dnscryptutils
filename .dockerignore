@@ -1,4 +1,5 @@
 *
-!utils.py
-!rules.py
+!src
+!pyproject.toml
+!setup.py
 !dnsstamps-to-rules.py
