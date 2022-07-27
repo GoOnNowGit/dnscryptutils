@@ -23,7 +23,7 @@ class TestUtils(unittest.TestCase):
         self.ip6_stamp = "sdns://gRZbMjAwMTpiYzg6MTgyNDo3Mzg6OjFd"
         self.ip4_stamp = "sdns://gQ01MS4xNTguMTY2Ljk3"
         self.ip4_stamp_parsed = dict(address="51.158.166.97", port=None)
-        # self.ip6_stamp_parsed = dict(address=,port=None)
+        self.ip6_stamp_parsed = dict(address="2001:bc8:1824:738::1", port=None)
         self.toml_data = {
             "sources": {
                 "relays": {
@@ -45,15 +45,19 @@ class TestUtils(unittest.TestCase):
         addrs = utils.get_sdns_info(None)
         self.assertEqual(list(addrs), [])
 
+    def test_bad_sdns_returns_empty(self):
+        stamp = "sdns://THISISABADSDNS"
+        self.assertEqual(utils.parse_stamp(stamp), {})
+
     def test_gets_multiple_sdns(self):
         datasource = """
         # sdns one
         sdns://gRZbMjAwMTpiYzg6MTgyNDo3Mzg6OjFd
         # sdns two
-        sdns://THISISABADSDNS
+        sdns://gRZbMjAwMTpiYzg6MTgyNDo3Mzg6OjFd
         """
         addrs = utils.get_sdns_info(datasource)
-        self.assertEqual(len(list(addrs)), 1)
+        self.assertEqual(len(list(addrs)), 2)
 
     def test_given_empty_toml_returns_empty_list(self):
         data = utils.get_sources_from_toml({})

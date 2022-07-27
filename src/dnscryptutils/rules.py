@@ -1,6 +1,16 @@
 from io import StringIO
 
 
+class Console:
+    def __call__(self, info: dict) -> str:
+        server = info.get("address")
+        port = info.get("port")
+        source = info.get("source")
+        url = info.get("url")
+        minisign_key = info.get("minisign_key")
+        return f"{source} {url} {minisign_key} {server} {port}"
+
+
 class PfRule:
     def __init__(
         self,
@@ -8,15 +18,15 @@ class PfRule:
         interface=None,
         quick=True,
         log=False,
-        label=None,
+        add_label=True,
     ):
         self.action = action
         self.quick = quick
         self.log = log
         self.interface = interface
-        self.label = label
+        self.add_label = add_label
 
-    def make_rule(self, info: dict, *args, **kwargs):
+    def __call__(self, info: dict) -> str:
         server = info["address"]
         port = info.get("port", None)
 
@@ -36,7 +46,7 @@ class PfRule:
             r.write(f" {server}")
         if port:
             r.write(f" port {port}")
-        if self.label:
-            r.write(f" label {self.label}")
+        if self.add_label and info.get("source"):
+            r.write(f" label {info['source']}")
 
         return r.getvalue()

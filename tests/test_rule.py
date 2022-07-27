@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from dnscryptutils.rules import PfRule
+from dnscryptutils.rules import Console, PfRule
 
 
 class TestPfRule(TestCase):
@@ -13,23 +13,39 @@ class TestPfRule(TestCase):
             ),
             (PfRule(), dict(address="address"), "pass out quick proto tcp to address"),
             (
-                PfRule(label="testing"),
-                dict(address="address"),
+                PfRule(),
+                dict(address="address", source="testing"),
                 "pass out quick proto tcp to address label testing",
             ),
             (
-                PfRule(interface="en0", label="testing"),
-                dict(address="address"),
+                PfRule(interface="en0"),
+                dict(address="address", source="testing"),
                 "pass out quick on en0 proto tcp to address label testing",
             ),
             (
-                PfRule(log=True, interface="en0", label="testing"),
-                dict(address="address"),
+                PfRule(log=True, interface="en0"),
+                dict(address="address", source="testing"),
                 "pass out log quick on en0 proto tcp to address label testing",
             ),
         ]
 
-        for pf_rule, info, expected in tests:
+        for pf_obj, info, expected in tests:
             with self.subTest(f"should return {expected}"):
-                result = pf_rule.make_rule(info)
+                result = pf_obj(info)
+                self.assertEqual(expected, result)
+
+
+class TestRaw(TestCase):
+    def test_raw_rule(self):
+        tests = [
+            (
+                Console(),
+                dict(address="address", source="testing"),
+                "testing None None address None",
+            ),
+        ]
+
+        for obj, info, expected in tests:
+            with self.subTest(f"should return {expected}"):
+                result = obj(info)
                 self.assertEqual(expected, result)

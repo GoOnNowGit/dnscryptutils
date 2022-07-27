@@ -28,7 +28,9 @@ class MalformedSDNS(GetStampInfoError):
 
 
 @contextmanager
-def data_disk(named_data: dict, file_provider=mkstemp, file_remover=os.unlink):
+def dict_to_disk(
+    named_data: dict, file_provider=mkstemp, file_remover=os.unlink, remove_files=True
+):
     """
     for each key in named_data write the value (named_data[key])
     to a temporary file on disk. then yield a new dictionary where the keys
@@ -44,8 +46,9 @@ def data_disk(named_data: dict, file_provider=mkstemp, file_remover=os.unlink):
             paths[name] = path
         yield paths
     finally:
-        for path in paths.values():
-            file_remover(path)
+        if remove_files:
+            for path in paths.values():
+                file_remover(path)
 
 
 def get_stamps(data: str):
@@ -63,9 +66,8 @@ def parse_stamp(stamp: str):
     """
     try:
         parsed = dnsstamps.parse(stamp)
-    except Exception:
-        return None
-        # raise MalformedSDNS from exc
+    except Exception as e:
+        return {}
 
     if re.search(r"]:\d{1,5}", parsed.address):
         # remove port and if ip6 remove []
@@ -113,10 +115,9 @@ def minisign_verify(
     return command_executor(args)
 
 
-def get_sdns_info(data: str):
+def get_sdns_info(data: str) -> dict:
     for stamp in get_stamps(data):
-        info = parse_stamp(stamp)
-        if info:
+        if info := parse_stamp(stamp):
             yield info
 
 
@@ -137,7 +138,7 @@ def minisigned_url(
     minisign_key: str,
     minisig_url=None,
     url_retriever=requests_api,
-    disk=data_disk,
+    disk=dict_to_disk,
     minisign=minisign_verify,
 ) -> bytes:
     """
@@ -146,12 +147,9 @@ def minisigned_url(
     """
     minisign_url = minisig_url or f"{url}.minisig"
 
-    source_response = url_retriever(url)
-    minisig_response = url_retriever(minisign_url)
-
     responses = {
-        "source": source_response,
-        "minisig": minisig_response,
+        "source": url_retriever(url),
+        "minisig": url_retriever(minisign_url),
     }
 
     with disk(responses) as file_path_for:
@@ -162,10 +160,10 @@ def minisigned_url(
         if result != 0:
             raise NoDataFromSource
 
-    return source_response
+    return responses["source"]
 
 
-def get_sources_from_toml(toml_data: dict):
+def get_sources_from_toml(toml_data: dict) -> tuple:
     """
     retrieve source blocks from dnscrypt-proxy.toml
     """
