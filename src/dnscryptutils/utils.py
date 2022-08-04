@@ -113,7 +113,7 @@ def parse_stamp(stamp: str) -> dict:
     try:
         parsed = dnsstamps.parse(stamp)
     except Exception as e:
-        return {}
+        return dict(address=None, port=None, stamp=stamp)
 
     if re.search(r"]:\d{1,5}", parsed.address):
         # remove port and if ip6 remove []

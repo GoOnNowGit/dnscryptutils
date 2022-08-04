@@ -22,8 +22,12 @@ class TestUtils(unittest.TestCase):
     def setUp(self):
         self.ip6_stamp = "sdns://gRZbMjAwMTpiYzg6MTgyNDo3Mzg6OjFd"
         self.ip4_stamp = "sdns://gQ01MS4xNTguMTY2Ljk3"
-        self.ip4_stamp_parsed = dict(address="51.158.166.97", port=None)
-        self.ip6_stamp_parsed = dict(address="2001:bc8:1824:738::1", port=None)
+        self.ip4_stamp_parsed = dict(
+            address="51.158.166.97", port=None, stamp=self.ip4_stamp
+        )
+        self.ip6_stamp_parsed = dict(
+            address="2001:bc8:1824:738::1", port=None, stamp=self.ip6_stamp
+        )
         self.toml_data = {
             "sources": {
                 "relays": {
@@ -47,7 +51,10 @@ class TestUtils(unittest.TestCase):
 
     def test_bad_sdns_returns_empty(self):
         stamp = "sdns://THISISABADSDNS"
-        self.assertEqual(utils.parse_stamp(stamp), {})
+        self.assertEqual(
+            utils.parse_stamp(stamp),
+            dict(address=None, port=None, stamp="sdns://THISISABADSDNS"),
+        )
 
     def test_gets_multiple_sdns(self):
         datasource = """
@@ -87,7 +94,10 @@ class TestUtils(unittest.TestCase):
         )
 
         result = utils.get_sdns_info(data_source)
-        self.assertEqual(list(result), [self.ip4_stamp_parsed])
+        self.assertEqual(
+            list(result),
+            [self.ip4_stamp_parsed],
+        )
 
     def test_minisign_fails_to_validate_and_returns_no_data(self):
         requester = MagicMock()
