@@ -14,9 +14,9 @@ class TestE2E(unittest.TestCase):
         self.config = os.path.join(TestE2E.HERE, "test_data", "dnscrypt-proxy.toml")
         self.toml_data = toml.load(self.config)
 
-    @unittest.skip("skipping e2e")
+    # @unittest.skip("skipping e2e")
     def test_e2e(self):
-        source, url, mkey = next(utils.get_sources_from_toml(self.toml_data))
+        source, url, mkey = next(utils.get_sources_from_dnscrypt_config(self.toml_data))
 
         self.assertEqual(source, "relays")
         self.assertEqual(

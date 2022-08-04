@@ -1,7 +1,11 @@
+import argparse
 from io import StringIO
 
 
-class Console:
+class Raw:
+    def __init__(self, args: argparse.Namespace):
+        pass
+
     def __call__(self, info: dict) -> str:
         server = info.get("address")
         port = info.get("port")
@@ -12,19 +16,14 @@ class Console:
 
 
 class PfRule:
-    def __init__(
-        self,
-        action="pass",
-        interface=None,
-        quick=True,
-        log=False,
-        add_label=True,
-    ):
-        self.action = action
-        self.quick = quick
-        self.log = log
-        self.interface = interface
-        self.add_label = add_label
+    def __init__(self, args: argparse.Namespace):
+        self.action = args.action
+        self.quick = args.quick
+        self.log = args.log
+        self.interface = args.interface
+        self.add_label = args.add_label
+        self.source = args.source
+        self.protocol = args.protocol
 
     def __call__(self, info: dict) -> str:
         server = info["address"]
@@ -39,11 +38,12 @@ class PfRule:
             r.write(" quick")
         if self.interface:
             r.write(f" on {self.interface}")
-
-        r.write(" proto tcp to")
-
+        if self.protocol:
+            r.write(f" proto {self.protocol}")
+        if self.source:
+            r.write(f" from {self.source}")
         if server:
-            r.write(f" {server}")
+            r.write(f" to {server}")
         if port:
             r.write(f" port {port}")
         if self.add_label and info.get("source"):

@@ -60,11 +60,11 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(len(list(addrs)), 2)
 
     def test_given_empty_toml_returns_empty_list(self):
-        data = utils.get_sources_from_toml({})
+        data = utils.get_sources_from_dnscrypt_config({})
         self.assertSequenceEqual(list(data), [])
 
     def test_given_valid_toml_returns_source_data(self):
-        result = utils.get_sources_from_toml(self.toml_data)
+        result = utils.get_sources_from_dnscrypt_config(self.toml_data)
         expected = [
             (
                 "relays",

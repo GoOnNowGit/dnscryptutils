@@ -2,7 +2,7 @@
 *.pyc
 *.swp
 .DS_Store
-.coverage
+.coverage*
 .hypothesis
 .pytest_cache
 .tox

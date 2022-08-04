@@ -4,54 +4,48 @@ import sys
 import toml
 
 from dnscryptutils import utils
-from dnscryptutils.rules import Console, PfRule
-
-parser = argparse.ArgumentParser(
-    description="build firweall rules from dnstamps in dnscrypt-proxy.toml sources"
-)
+from dnscryptutils.rules import PfRule, Raw
 
 
-parser.add_argument(
-    "--dnscrypt_config",
-    action="store",
-    help="dnscrypt-proxy.toml file path",
-)
+def parse_args(args):
+    parser = argparse.ArgumentParser(
+        description="build firweall rules from dnstamps in dnscrypt-proxy.toml sources"
+    )
 
-parser.add_argument(
-    "--rule_type",
-    required=True,
-    choices=["pf", "console"],
-    action="store",
-    help="type of rules to output",
-)
+    parser.add_argument(
+        "--dnscrypt_config",
+        help="dnscrypt-proxy.toml file path",
+    )
 
-pfrule_arg_group = parser.add_argument_group("pf")
-pfrule_arg_group.add_argument("--interface")
-pfrule_arg_group.add_argument("--action")
-pfrule_arg_group.add_argument("--log", action="store_false")
-pfrule_arg_group.add_argument("--quick", action="store_false")
-pfrule_arg_group.add_argument("--add_label", action="store_false")
+    parser.add_argument(
+        "--rule_engine",
+        choices=["pf", "raw"],
+        help="type of rules to output",
+    )
 
+    pf_group = parser.add_argument_group("pf")
+    pf_group.add_argument("--interface", default=None)
+    pf_group.add_argument("--action", default="pass", help="block | pass")
+    pf_group.add_argument("--log", action="store_false")
+    pf_group.add_argument("--quick", action="store_false")
+    pf_group.add_argument("--add_label", action="store_false")
 
-args = parser.parse_args()
-
-rule_engines = {
-    "pf": PfRule,
-    "console": Console,
-}
+    return parser.parse_args()
 
 
 def main():
-    rule_type = rule_engines[args.rule_type]
+    rule_engines = {
+        "pf": PfRule,
+        "raw": Raw,
+    }
+
+    args = parse_args(sys.argv[1:])
+
+    rule_engine = rule_engines[args.rule_engine]
     toml_data = toml.load(args.dnscrypt_config)
+    the_rule_engine = rule_engine(args)
 
-    rule_engine = None
-    if args.rule_type == "pf":
-        rule_engine(interface=args.pf.interface)
-
-    sources = utils.get_sources_from_toml(toml_data)
-
-    for source, url, minisign_key in sources:
+    for source, url, minisign_key in utils.get_sources_from_dnscrypt_config(toml_data):
         try:
             data = utils.minisigned_url(url, minisign_key)
         except utils.NoDataFromSource:
@@ -62,8 +56,8 @@ def main():
             info["source"] = source
             info["url"] = url
             info["minisign_key"] = minisign_key
-            rule = rule_engine(info)
-            print(rule)
+            output = the_rule_engine(info)
+            print(output)
 
 
 if __name__ == "__main__":
