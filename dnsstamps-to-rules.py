@@ -43,6 +43,7 @@ def main():
 
     rule_engine = rule_engines[args.rule_engine]
     toml_data = toml.load(args.dnscrypt_config)
+    # instantiate the rule engine with the parsed args
     the_rule_engine = rule_engine(args)
 
     for source, url, minisign_key in utils.get_sources_from_dnscrypt_config(toml_data):

@@ -126,3 +126,9 @@ class TestUtils(unittest.TestCase):
             info = utils.parse_stamp(stamp)
             # should parse as a valid address
             ipaddress.ip_address(info["address"])
+
+    def test_address_and_port_is_none(self):
+        stamp = "sdns://AgcAAAAAAAAAAKDMEGDTnIMptitvvH0NbfkwmGm5gefmOS1c2PpAj02A5iBETr1nu4P4gHs5Iek4rJF4uIK9UKrbESMfBEz18I33zhZkb2guYXBwbGllZHByaXZhY3kubmV0Bi9xdWVyeQ"
+        info = utils.parse_stamp(stamp)
+        self.assertIsNone(info["address"])
+        self.assertIsNone(info["port"])

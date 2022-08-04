@@ -110,6 +110,7 @@ def parse_stamp(stamp: str) -> dict:
     dict
         _description_
     """
+    parsed = None
     try:
         parsed = dnsstamps.parse(stamp)
     except Exception as e:
@@ -126,7 +127,8 @@ def parse_stamp(stamp: str) -> dict:
         # ip4
         address, port = parsed.address.rsplit(":", 1)
     else:
-        address, port = parsed.address, None
+        address = (parsed.address != "") and parsed.address or None
+        port = None
 
     return dict(address=address, port=port, stamp=stamp)
 
