@@ -12,7 +12,8 @@ class Raw:
         source = info.get("source")
         url = info.get("url")
         minisign_key = info.get("minisign_key")
-        return f"{source} {url} {minisign_key} {server} {port}"
+        stamp = info.get("stamp")
+        return f"{source} {url} {minisign_key} {stamp} {server} {port}"
 
 
 class PfRule:

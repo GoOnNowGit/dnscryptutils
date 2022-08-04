@@ -93,7 +93,7 @@ def get_stamps(data: str) -> Generator[str, None, None]:
     """
 
     data = data or ""
-    pattern = r"sdns://[a-zA-z0-9]+"
+    pattern = r"\bsdns://[^\s]+"
     return re.findall(pattern, data)
 
 

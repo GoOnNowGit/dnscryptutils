@@ -95,8 +95,8 @@ class TestRaw(TestCase):
         tests = [
             (
                 Raw(argparse.Namespace()),
-                dict(address="address", source="testing"),
-                "testing None None address None",
+                dict(address="address", stamp="stamp", source="testing"),
+                "testing None None stamp address None",
             ),
         ]
 
