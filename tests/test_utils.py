@@ -47,26 +47,35 @@ class TestUtils(unittest.TestCase):
         expected = [
             (
                 "public-resolvers",
-                "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md",
+                "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md",
                 "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
             ),
             (
                 "public-resolvers",
-                "https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md",
+                "https://download.dnscrypt.info/resolvers-list/v3/public-resolvers.md",
+                "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
+            ),
+            (
+                "public-resolvers",
+                "https://ipv6.download.dnscrypt.info/resolvers-list/v3/public-resolvers.md",
                 "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
             ),
             (
                 "relays",
-                "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/relays.md",
+                "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/relays.md",
                 "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
             ),
             (
                 "relays",
-                "https://download.dnscrypt.info/resolvers-list/v2/relays.md",
+                "https://download.dnscrypt.info/resolvers-list/v3/relays.md",
+                "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
+            ),
+            (
+                "relays",
+                "https://ipv6.download.dnscrypt.info/resolvers-list/v3/relays.md",
                 "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
             ),
         ]
-
         self.assertEqual(list(result), expected)
 
     def test_given_good_data_source_returns_sdns_addrs(self):

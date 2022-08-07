@@ -38,7 +38,7 @@ def main():
         try:
             data = utils.minisigned_url(url, minisign_key)
         except utils.NoDataFromSource:
-            bad_sources.append(source)
+            bad_sources.append((source, url, minisign_key))
             continue
         # some stamps seem to return an empty host.
         # just returns dicts that have a host
@@ -50,7 +50,8 @@ def main():
             print(dump_info(info))
 
     if len(bad_sources):
-        print(f"sources that returned no data:\n{bad_sources}")
+        erorr_lines = "\n\t".join(bad_sources)
+        print(f"Sources that returned no data:\n{erorr_lines}")
 
 
 if __name__ == "__main__":
