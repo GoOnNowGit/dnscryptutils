@@ -121,14 +121,13 @@ def parse_stamp(stamp: str) -> dict:
     if parsed.address == "":
         return dict(address=address, port=port, stamp=stamp)
 
+    # ip6
     if re.search(r"]:\d{1,5}$", parsed.address):
         # remove port and remove []
         address, port = re.sub(r"[\[|\]]", "", parsed.address).rsplit(":", 1)
-        print(f"data is {address} {port}")
     elif re.search(r"]$", parsed.address):
         # no port, remove []
         address, port = re.sub(r"[\[|\]]", "", parsed.address), None
-        print(f"data is {address} {port}")
     # ip4
     elif re.search(r"[^\]]:\d{1,5}$", parsed.address):
         address, port = parsed.address.rsplit(":", 1)
