@@ -4,12 +4,21 @@ import sys
 import toml
 
 from dnscryptutils import utils
-from dnscryptutils.rules import PfRule, Raw
+
+
+def dump_info(info: dict) -> str:
+    server = info.get("address")
+    port = info.get("port")
+    source = info.get("source")
+    url = info.get("url")
+    minisign_key = info.get("minisign_key")
+    stamp = info.get("stamp")
+    return f"{source} {url} {minisign_key} {stamp} {server} {port}"
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
-        description="build firweall rules from dnstamps in dnscrypt-proxy.toml sources"
+        description="Dump SDNS info from source URLS in dnscrypt-proxy.toml config"
     )
 
     parser.add_argument(
@@ -17,48 +26,31 @@ def parse_args(args):
         help="dnscrypt-proxy.toml file path",
     )
 
-    parser.add_argument(
-        "--rule_engine",
-        choices=["pf", "raw"],
-        help="type of rules to output",
-    )
-
-    pf_group = parser.add_argument_group("pf")
-    pf_group.add_argument("--interface", default=None)
-    pf_group.add_argument("--action", default="pass", help="block | pass")
-    pf_group.add_argument("--log", action="store_false")
-    pf_group.add_argument("--quick", action="store_false")
-    pf_group.add_argument("--add_label", action="store_false")
-
     return parser.parse_args()
 
 
 def main():
-    rule_engines = {
-        "pf": PfRule,
-        "raw": Raw,
-    }
-
     args = parse_args(sys.argv[1:])
-
-    rule_engine = rule_engines[args.rule_engine]
     toml_data = toml.load(args.dnscrypt_config)
-    # instantiate the rule engine with the parsed args
-    the_rule_engine = rule_engine(args)
+    bad_sources = []
 
     for source, url, minisign_key in utils.get_sources_from_dnscrypt_config(toml_data):
         try:
             data = utils.minisigned_url(url, minisign_key)
         except utils.NoDataFromSource:
-            print(f"No data from {source}...")
+            bad_sources.append(source)
             continue
-
-        for info in utils.get_sdns_info(data):
+        # some stamps seem to return an empty host.
+        # just returns dicts that have a host
+        servers = (info for info in utils.get_sdns_info(data) if info["address"])
+        for info in servers:
             info["source"] = source
             info["url"] = url
             info["minisign_key"] = minisign_key
-            output = the_rule_engine(info)
-            print(output)
+            print(dump_info(info))
+
+    if len(bad_sources):
+        print(f"sources that returned no data:\n{bad_sources}")
 
 
 if __name__ == "__main__":

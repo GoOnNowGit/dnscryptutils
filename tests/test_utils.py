@@ -3,19 +3,9 @@ import os.path
 import unittest
 from unittest.mock import MagicMock
 
+import toml
+
 from dnscryptutils import utils
-
-
-class FakeMinisign:
-    def __init__(self, expected_minisign_key, return_value=0):
-        self.expected_minisign_key = expected_minisign_key
-        self.return_value = return_value
-
-    def __call__(self, source_filepath: str, minisig_filepath: str, minisign_key: str):
-        assert os.path.exists(source_filepath)
-        assert os.path.exists(minisig_filepath)
-        assert minisign_key == self.expected_minisign_key
-        return self.return_value
 
 
 class TestUtils(unittest.TestCase):
@@ -28,17 +18,7 @@ class TestUtils(unittest.TestCase):
         self.ip6_stamp_parsed = dict(
             address="2001:bc8:1824:738::1", port=None, stamp=self.ip6_stamp
         )
-        self.toml_data = {
-            "sources": {
-                "relays": {
-                    "urls": ["http://127.0.0.1:8080/test_data/relays.md"],
-                    "cache_file": "relays.md",
-                    "minisign_key": "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
-                    "refresh_delay": 72,
-                    "prefix": "",
-                }
-            }
-        }
+
         HERE = os.path.abspath(os.path.dirname(__file__))
         self.relays_md = os.path.join(HERE, "test_data", "relays.md")
         self.dnscrypt_proxy_config = os.path.join(
@@ -56,36 +36,45 @@ class TestUtils(unittest.TestCase):
             dict(address=None, port=None, stamp="sdns://THISISABADSDNS"),
         )
 
-    def test_gets_multiple_sdns(self):
-        datasource = """
-        # sdns one
-        sdns://gRZbMjAwMTpiYzg6MTgyNDo3Mzg6OjFd
-        # sdns two
-        sdns://gRZbMjAwMTpiYzg6MTgyNDo3Mzg6OjFd
-        """
-        addrs = utils.get_sdns_info(datasource)
-        self.assertEqual(len(list(addrs)), 2)
-
     def test_given_empty_toml_returns_empty_list(self):
         data = utils.get_sources_from_dnscrypt_config({})
         self.assertSequenceEqual(list(data), [])
 
     def test_given_valid_toml_returns_source_data(self):
-        result = utils.get_sources_from_dnscrypt_config(self.toml_data)
+        data = toml.load(self.dnscrypt_proxy_config)
+        result = utils.get_sources_from_dnscrypt_config(data)
+
         expected = [
             (
+                "public-resolvers",
+                "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md",
+                "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
+            ),
+            (
+                "public-resolvers",
+                "https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md",
+                "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
+            ),
+            (
                 "relays",
-                "http://127.0.0.1:8080/test_data/relays.md",
+                "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/relays.md",
+                "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
+            ),
+            (
+                "relays",
+                "https://download.dnscrypt.info/resolvers-list/v2/relays.md",
                 "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
             ),
         ]
+
         self.assertEqual(list(result), expected)
 
     def test_given_good_data_source_returns_sdns_addrs(self):
         requester = MagicMock()
         requester.side_effect = [self.ip4_stamp, "minisig_data"]
         expected_minisign_key = "minisign_key"
-        fake_minisign = FakeMinisign(expected_minisign_key)
+        fake_minisign = MagicMock()
+        fake_minisign.return_value = 0
         data_source = utils.minisigned_url(
             "url",
             expected_minisign_key,
@@ -103,10 +92,8 @@ class TestUtils(unittest.TestCase):
         requester = MagicMock()
         requester.side_effect = [self.ip4_stamp, "minisig_data"]
         expected_minisign_key = "minisign_key"
-        fake_minisign = FakeMinisign(
-            expected_minisign_key=expected_minisign_key, return_value=1
-        )
-
+        fake_minisign = MagicMock()
+        fake_minisign.return_value = 1
         with self.assertRaises(utils.NoDataFromSource):
             _ = utils.minisigned_url(
                 "url",

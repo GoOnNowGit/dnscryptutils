@@ -1,16 +1,15 @@
 """
 helper functions to retrieve sources from
-a dnscrypt-config.toml, extract dns stamps and
+a dnscrypt-config.toml, extract dnsstamps and
 parsing those stamps to return ip addresses
 """
 
 import os
-import os.path
 import re
 import subprocess
-from ast import Call
 from contextlib import contextmanager
 from email.generator import Generator
+from pathlib import Path
 from tempfile import mkstemp
 from typing import Callable, Generator, List, Tuple
 
@@ -111,10 +110,12 @@ def parse_stamp(stamp: str) -> dict:
         _description_
     """
     parsed = None
+    address = None
+    port = None
     try:
         parsed = dnsstamps.parse(stamp)
     except Exception as e:
-        return dict(address=None, port=None, stamp=stamp)
+        return dict(address=address, port=port, stamp=stamp)
 
     if re.search(r"]:\d{1,5}", parsed.address):
         # remove port and if ip6 remove []
@@ -127,8 +128,8 @@ def parse_stamp(stamp: str) -> dict:
         # ip4
         address, port = parsed.address.rsplit(":", 1)
     else:
-        address = (parsed.address != "") and parsed.address or None
-        port = None
+        if parsed.address != "":
+            address = parsed.address
 
     return dict(address=address, port=port, stamp=stamp)
 
@@ -149,11 +150,12 @@ def subprocess_execute(args: list) -> int:
     return subprocess.call(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def minisign_verify(
-    source_filepath: str,
-    minisig_filepath: str,
+def minisign(
+    source_data: str,
+    minisig_data: str,
     minisign_key: str,
     command_executor: Callable[[List], int] = subprocess_execute,
+    disk=dict_to_disk,
 ) -> int:
     """_summary_
 
@@ -173,18 +175,25 @@ def minisign_verify(
     int
         _description_
     """
-    minisign = os.path.join("/", "usr", "local", "bin", "minisign")
-    args = [
-        minisign,
-        "-V",
-        "-m",
-        source_filepath,
-        "-x",
-        minisig_filepath,
-        "-P",
-        minisign_key,
-    ]
-    return command_executor(args)
+    data = {
+        "source": source_data,
+        "minisig": minisig_data,
+    }
+
+    with disk(data) as file_path_for:
+        # verify minisigned data
+        minisign = str(Path("/", "usr", "local", "bin", "minisign"))
+        args = [
+            minisign,
+            "-V",
+            "-m",
+            file_path_for["source"],
+            "-x",
+            file_path_for["minisig"],
+            "-P",
+            minisign_key,
+        ]
+        return command_executor(args)
 
 
 def get_sdns_info(data: str) -> dict:
@@ -228,11 +237,10 @@ def minisigned_url(
     url: str,
     minisign_key: str,
     minisig_url=None,
-    url_retriever=requests_api,
-    disk=dict_to_disk,
-    minisign=minisign_verify,
+    url_retriever: Callable[[str], bytes] = requests_api,
+    minisign: Callable[[str, str, str], int] = minisign,
 ) -> bytes:
-    """retrieve a minisigned url and minisig file and verify the data
+    """_summary_
 
     Parameters
     ----------
@@ -240,14 +248,12 @@ def minisigned_url(
         _description_
     minisign_key : str
         _description_
-    minisig_url : _type_, optional
+    minisig_url : str, optional
         _description_, by default None
-    url_retriever : _type_, optional
+    url_retriever : Callable[[str], bytes], optional
         _description_, by default requests_api
-    disk : _type_, optional
-        _description_, by default dict_to_disk
-    minisign : _type_, optional
-        _description_, by default minisign_verify
+    minisign : Callable[[str, str, str], int], optional
+        _description_, by default minisign
 
     Returns
     -------
@@ -259,22 +265,18 @@ def minisigned_url(
     NoDataFromSource
         _description_
     """
-    minisign_url = minisig_url or f"{url}.minisig"
+    if not minisig_url:
+        minisig_url = f"{url}.minisig"
 
-    responses = {
-        "source": url_retriever(url),
-        "minisig": url_retriever(minisign_url),
-    }
+    source = url_retriever(url)
+    minisig = url_retriever(minisig_url)
 
-    with disk(responses) as file_path_for:
-        # verify  minisigned data
-        result = minisign(
-            file_path_for["source"], file_path_for["minisig"], minisign_key
-        )
-        if result != 0:
-            raise NoDataFromSource
+    result = minisign(source, minisig, minisign_key)
 
-    return responses["source"]
+    if result != 0:
+        raise NoDataFromSource
+
+    return source
 
 
 def get_sources_from_dnscrypt_config(toml_data: dict) -> Generator[Tuple, None, None]:
