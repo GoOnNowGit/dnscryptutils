@@ -17,11 +17,11 @@ import dnsstamps
 import requests
 
 
-class GetStampInfoError(Exception):
+class DnscryptUtilsError(Exception):
     pass
 
 
-class NoDataFromSource(GetStampInfoError):
+class NoDataFromSource(DnscryptUtilsError):
     pass
 
 
@@ -112,24 +112,28 @@ def parse_stamp(stamp: str) -> dict:
     parsed = None
     address = None
     port = None
+
     try:
         parsed = dnsstamps.parse(stamp)
     except Exception as e:
         return dict(address=address, port=port, stamp=stamp)
+    # just return if there's no address
+    if parsed.address == "":
+        return dict(address=address, port=port, stamp=stamp)
 
-    if re.search(r"]:\d{1,5}", parsed.address):
-        # remove port and if ip6 remove []
-        # address = re.sub(r"[\[|\]]", "", addr.rsplit(":", 1)[0])
+    if re.search(r"]:\d{1,5}$", parsed.address):
+        # remove port and remove []
         address, port = re.sub(r"[\[|\]]", "", parsed.address).rsplit(":", 1)
+        print(f"data is {address} {port}")
     elif re.search(r"]$", parsed.address):
-        # no port, if ip6 remove []
+        # no port, remove []
         address, port = re.sub(r"[\[|\]]", "", parsed.address), None
-    elif re.search(r":\d{1,5}$", parsed.address):
-        # ip4
+        print(f"data is {address} {port}")
+    # ip4
+    elif re.search(r"[^\]]:\d{1,5}$", parsed.address):
         address, port = parsed.address.rsplit(":", 1)
     else:
-        if parsed.address != "":
-            address = parsed.address
+        address = parsed.address
 
     return dict(address=address, port=port, stamp=stamp)
 
