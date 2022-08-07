@@ -28,5 +28,5 @@ RUN buildDeps=' \
     && rm -rf /var/lib/apt/lists/* \
 	&& apt-get purge -y --auto-remove $buildDeps
 
-ENTRYPOINT ["python3", "dnsstamps-to-rules.py"]
+ENTRYPOINT ["python3", "dump_sdns_info.py"]
 CMD ["--help"]
