@@ -1,27 +1,29 @@
 """
-helper functions to retrieve sources from
-a dnscrypt-config.toml, extract dnsstamps and
-parsing those stamps to return ip addresses
+Helper functions to retrieve minisigned sources from
+a dnscrypt-config.toml, parse dnsstamps and return stamp info
 """
 
 import os
 import re
 import subprocess
 from contextlib import contextmanager
-from email.generator import Generator
 from pathlib import Path
 from tempfile import mkstemp
-from typing import Callable, Generator, List, Tuple
+from typing import Callable, Dict, Generator, List, Tuple
 
 import dnsstamps
 import requests
 
 
 class DnscryptUtilsError(Exception):
+    """Base Exception for module"""
+
+    # pylint: disable=unnecessary-pass
     pass
 
 
 class NoDataFromSource(DnscryptUtilsError):
+    # pylint: disable=unnecessary-pass
     pass
 
 
@@ -31,8 +33,8 @@ def dict_to_disk(
     file_provider: Callable = mkstemp,
     file_remover: Callable = os.unlink,
     remove_files: bool = True,
-) -> dict:
-    """for each key in named_data write the value (named_data[key])
+) -> Generator[Dict[str, str], None, None]:
+    """For each key in named_data write the value (named_data[key])
     to a temporary file on disk. then yield a new dictionary where the keys
     are the keys from named_data and the values are the corresponding temporary
     file paths were the values (named_data[key]) were written to disk
@@ -48,22 +50,17 @@ def dict_to_disk(
     remove_files : bool, optional
         _description_, by default True
 
-    Returns
-    -------
-    dict
-        _description_
-
     Yields
     ------
-    Iterator[dict]
+    Generator[Dict[str,str], None, None]
         _description_
     """
     paths = {}
 
     try:
         for name, data in named_data.items():
-            fd, path = file_provider()
-            os.write(fd, data.encode())
+            file_descriptor, path = file_provider()
+            os.write(file_descriptor, data.encode())
             paths[name] = path
         yield paths
     finally:
@@ -97,17 +94,18 @@ def get_stamps(data: str) -> Generator[str, None, None]:
 
 
 def parse_stamp(stamp: str) -> dict:
-    """_summary_
+    """Calls dnsstamps.parse to parse a stamp and returns a dictionary containing
+    a subset of the parsed fields
 
     Parameters
     ----------
     stamp : str
-        _description_
+        The sdns
 
     Returns
     -------
     dict
-        _description_
+        A subset of fields from the parsed dns stamp
     """
     parsed = None
     address = None
@@ -115,7 +113,7 @@ def parse_stamp(stamp: str) -> dict:
 
     try:
         parsed = dnsstamps.parse(stamp)
-    except Exception as e:
+    except Exception:
         return dict(address=address, port=port, stamp=stamp)
     # just return if there's no address
     if parsed.address == "":
@@ -138,17 +136,17 @@ def parse_stamp(stamp: str) -> dict:
 
 
 def subprocess_execute(args: list) -> int:
-    """_summary_
+    """Uses subprocess to execute a command
 
     Parameters
     ----------
     args : list
-        _description_
+        List of arguments
 
     Returns
     -------
     int
-        _description_
+        Return code of subprocess.call
     """
     return subprocess.call(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -185,9 +183,9 @@ def minisign(
 
     with disk(data) as file_path_for:
         # verify minisigned data
-        minisign = str(Path("/", "usr", "local", "bin", "minisign"))
+        minisign_path = str(Path("/", "usr", "local", "bin", "minisign"))
         args = [
-            minisign,
+            minisign_path,
             "-V",
             "-m",
             file_path_for["source"],
@@ -200,30 +198,41 @@ def minisign(
 
 
 def get_sdns_info(data: str) -> dict:
+    """Extracts sdns stamps from a string
+
+    Parameters
+    ----------
+    data : String containing dnsstamps
+        _description_
+
+    Yields
+    ------
+    Iterator[dict]
+        a subset of elements from a parsed dnsstamp
+    """
     for stamp in get_stamps(data):
         if info := parse_stamp(stamp):
             yield info
 
 
 def requests_api(url: str) -> bytes:
-    """_summary_
+    """Wrapper around requests
 
     Parameters
     ----------
     url : str
-        _description_
+        Url to retrieve
 
     Returns
     -------
     bytes
-        _description_
+        The url content
 
     Raises
     ------
     NoDataFromSource
-        _description_
-    NoDataFromSource
-        _description_
+        when a HTTP 200 response code isn't returned
+
     """
     try:
         response = requests.get(url)
@@ -236,45 +245,45 @@ def requests_api(url: str) -> bytes:
     return response.content.decode()
 
 
-def minisigned_url(
+def get_minisigned_url(
     url: str,
     minisign_key: str,
     minisig_url=None,
     url_retriever: Callable[[str], bytes] = requests_api,
-    minisign: Callable[[str, str, str], int] = minisign,
+    minisign_func: Callable[[str, str, str], int] = minisign,
 ) -> bytes:
-    """_summary_
+    """Gets content from a url and its minisign signature
+    and verifies the integrity of the data via minisign
 
     Parameters
     ----------
     url : str
-        _description_
+        Url to retrieve
     minisign_key : str
         _description_
     minisig_url : str, optional
         _description_, by default None
     url_retriever : Callable[[str], bytes], optional
         _description_, by default requests_api
-    minisign : Callable[[str, str, str], int], optional
+    minisign_func : Callable[[str, str, str], int], optional
         _description_, by default minisign
 
     Returns
     -------
     bytes
-        _description_
+        The contents of the url
 
     Raises
     ------
     NoDataFromSource
-        _description_
+        when a HTTP 200 response code isn't returned
     """
-    if not minisig_url:
-        minisig_url = f"{url}.minisig"
+    minisig_url = minisig_url or f"{url}.minisig"
 
     source = url_retriever(url)
     minisig = url_retriever(minisig_url)
 
-    result = minisign(source, minisig, minisign_key)
+    result = minisign_func(source, minisig, minisign_key)
 
     if result != 0:
         raise NoDataFromSource
@@ -283,17 +292,17 @@ def minisigned_url(
 
 
 def get_sources_from_dnscrypt_config(toml_data: dict) -> Generator[Tuple, None, None]:
-    """retrieves source blocks from dnscrypt-proxy.toml
+    """Retrieves the source block from dnscrypt-proxy.toml
 
     Parameters
     ----------
     toml_data : dict
-        _description_
+        Dnscrypt config
 
     Yields
     ------
     Generator[Tuple, None, None]
-        _description_
+        source, url, minisign key
     """
     sources = toml_data.get("sources", {})
     for source, properties in sources.items():

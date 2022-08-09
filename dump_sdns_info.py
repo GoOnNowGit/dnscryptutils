@@ -16,7 +16,7 @@ def dump_info(info: dict) -> str:
     return f"{source} {url} {minisign_key} {stamp} {server} {port}"
 
 
-def parse_args(args):
+def parse_args(arg: list) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Dump SDNS info from source URLS in dnscrypt-proxy.toml config"
     )
@@ -29,14 +29,14 @@ def parse_args(args):
     return parser.parse_args()
 
 
-def main():
+def main() -> int:
     args = parse_args(sys.argv[1:])
     toml_data = toml.load(args.dnscrypt_config)
     bad_sources = []
 
     for source, url, minisign_key in utils.get_sources_from_dnscrypt_config(toml_data):
         try:
-            data = utils.minisigned_url(url, minisign_key)
+            data = utils.get_minisigned_url(url, minisign_key)
         except utils.NoDataFromSource:
             bad_sources.append((source, url, minisign_key))
             continue
@@ -49,7 +49,7 @@ def main():
             info["minisign_key"] = minisign_key
             print(dump_info(info))
 
-    if len(bad_sources):
+    if len(bad_sources) == 0:
         erorr_lines = "\n\t".join(bad_sources)
         print(f"Sources that returned no data:\n{erorr_lines}")
 

@@ -84,11 +84,11 @@ class TestUtils(unittest.TestCase):
         expected_minisign_key = "minisign_key"
         fake_minisign = MagicMock()
         fake_minisign.return_value = 0
-        data_source = utils.minisigned_url(
+        data_source = utils.get_minisigned_url(
             "url",
             expected_minisign_key,
             url_retriever=requester,
-            minisign=fake_minisign,
+            minisign_func=fake_minisign,
         )
 
         result = utils.get_sdns_info(data_source)
@@ -104,11 +104,11 @@ class TestUtils(unittest.TestCase):
         fake_minisign = MagicMock()
         fake_minisign.return_value = 1
         with self.assertRaises(utils.NoDataFromSource):
-            _ = utils.minisigned_url(
+            _ = utils.get_minisigned_url(
                 "url",
                 expected_minisign_key,
                 url_retriever=requester,
-                minisign=fake_minisign,
+                minisign_func=fake_minisign,
             )
 
     def test_can_parse_addresses_from_valid_stamps(self):

@@ -3,9 +3,9 @@ requires = ["setuptools>=40.6.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
-parallel = true
+#parallel = true
 branch = true
-source = ["src"]
+source = ["dnscryptutils"]
 
 [tool.coverage.paths]
 source = ["src", ".tox/*/site-packages"]
