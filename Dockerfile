@@ -10,12 +10,12 @@ COPY pyproject.toml .
 COPY setup.py .
 
 RUN buildDeps=' \
-		curl \
+	curl \
         python3-setuptools \
 	' \
-	&& set -x \
+    && set -x \
     && apt update -qq && apt install -qqy $buildDeps --no-install-recommends \
-	&& rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* \
     && apt update -qq && apt install -qqy \
     ca-certificates \
     python3 \
@@ -26,7 +26,7 @@ RUN buildDeps=' \
     && python3 setup.py install \
     && rm -rf minisign-"${MINISIGN_VERSION}"-linux.tar.gz \
     && rm -rf /var/lib/apt/lists/* \
-	&& apt-get purge -y --auto-remove $buildDeps
+    && apt-get purge -y --auto-remove $buildDeps
 
 ENTRYPOINT ["python3", "dump_sdns_info.py"]
 CMD ["--help"]
