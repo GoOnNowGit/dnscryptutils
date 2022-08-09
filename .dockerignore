@@ -2,4 +2,4 @@
 !src
 !pyproject.toml
 !setup.py
-!dnsstamps-to-rules.py
+!dump_sdns_info.py
