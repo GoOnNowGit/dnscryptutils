@@ -5,7 +5,7 @@ ENV MINISIGN_VERSION=0.10
 ENV ARCH=x86_64
 
 COPY src/ src/
-COPY dnsstamps-to-rules.py .
+COPY dump_sdns_info.py .
 COPY pyproject.toml .
 COPY setup.py .
 
