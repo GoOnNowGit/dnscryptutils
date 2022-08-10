@@ -3,11 +3,6 @@
 # About
 Print out dnsstamp info from sources in your dnscrypt-config.toml configuration file.
 
-# Running the container
-```
-docker run --rm -it -v <DIRECTORY CONTAINING YOUR DNSCRYPT CONFIG>:/etc/dnscrypt:ro dnscryptutils --dnscrypt_config /etc/dnscrypt/dnscrypt-proxy.toml
-```
-
 ## Resources
 * https://github.com/DNSCrypt/dnscrypt-proxy
 * https://github.com/chrisss404/python-dnsstamps
